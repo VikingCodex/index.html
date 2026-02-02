@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Valheim: The Survivor's Codex</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Roboto:wght@300;400;500;700&family=Fira+Code:wght@400&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-deep: #0b0b0b;
+            --bg-panel: #141414;
+            --bg-element: #1e1e1e;
+            --text-main: #e0e0e0;
+            --accent-gold: #ffcc00;
+            --accent-orange: #d86d2c;
+            --discord: #5865F2;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; scroll-behavior: smooth; }
+        
+        body { 
+            background-color: var(--bg-deep); 
+            color: var(--text-main); 
+            font-family: 'Roboto', sans-serif; 
+            line-height: 1.6; 
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, h4 { font-family: 'Cinzel', serif; text-transform: uppercase; letter-spacing: 1px; }
+
+        /* --- LOADER --- */
+        #loader {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 9999;
+            display: flex; justify-content: center; align-items: center; flex-direction: column;
+            transition: opacity 0.5s;
+        }
+        .loader-rune {
+            font-size: 3rem; color: var(--accent-orange); animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse { 0% { opacity: 0.5; transform: scale(0.9); } 50% { opacity: 1; transform: scale(1.1); } 100% { opacity: 0.5; transform: scale(0.9); } }
+
+        /* --- NAVIGATION --- */
+        nav {
+            background: rgba(10, 10, 10, 0.95); padding: 1rem 2rem;
+            position: sticky; top: 0; z-index: 1000;
+            border-bottom: 2px solid var(--accent-orange);
+            display: flex; justify-content: space-between; align-items: center;
+            backdrop-filter: blur(10px);
+        }
+        .logo { font-size: 1.4rem; font-weight: 900; color: #fff; cursor: pointer; display: flex; align-items: center; gap: 10px; }
+        .logo i { color: var(--accent-orange); }
+
+        .nav-links { display: flex; gap: 20px; align-items: center; }
+        .nav-links a { color: #bbb; text-decoration: none; font-weight: 500; font-size: 0.9rem; transition: 0.3s; text-transform: uppercase; }
+        .nav-links a:hover { color: var(--accent-gold); }
+        
+        .hamburger { display: none; font-size: 1.5rem; cursor: pointer; color: white; }
+        .mobile-menu {
+            display: none; position: absolute; top: 100%; left: 0; width: 100%;
+            background: #111; flex-direction: column; padding: 20px; border-bottom: 2px solid var(--accent-orange);
+        }
+        .mobile-menu a { padding: 15px 0; border-bottom: 1px solid #333; font-size: 1.1rem; color: #fff; text-decoration: none; }
+        .mobile-menu.active { display: flex; }
+
+        /* --- HERO --- */
+        header {
+            height: 80vh; overflow: hidden; position: relative;
+            display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;
+        }
+        .hero-bg {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.3), var(--bg-deep)), url('https://images.unsplash.com/photo-1519074069444-1ba4fff66d16?q=80&w=2070');
+            background-size: cover; background-position: center; z-index: -1;
+            animation: zoomEffect 20s infinite alternate;
+        }
+        @keyframes zoomEffect { from { transform: scale(1); } to { transform: scale(1.15); } }
+        
+        header h1 { font-size: 3.5rem; color: #fff; margin-bottom: 1rem; text-shadow: 0 5px 20px rgba(0,0,0,0.9); z-index: 1; }
+        
+        .search-wrapper { position: relative; width: 100%; max-width: 600px; z-index: 1; }
+        .search-input {
+            width: 100%; padding: 18px 50px 18px 25px; border-radius: 50px;
+            border: 2px solid var(--accent-orange); background: rgba(0,0,0,0.8);
+            color: white; font-size: 1.1rem; outline: none; transition: 0.3s;
+        }
+        .search-input:focus { background: #000; box-shadow: 0 0 20px rgba(216, 109, 44, 0.4); }
+
+        /* --- SERVER WIDGET --- */
+        .server-widget {
+            background: var(--bg-panel); border: 1px solid #333; border-radius: 8px;
+            padding: 30px; margin: -50px auto 50px auto; max-width: 700px;
+            position: relative; z-index: 10; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            text-align: center; display: flex; flex-direction: column; gap: 15px;
+        }
+        .ip-box {
+            background: #000; color: var(--accent-gold); padding: 12px; font-family: 'Fira Code', monospace;
+            border-radius: 4px; font-size: 1.2rem; cursor: pointer; border: 1px dashed #444; transition: 0.3s;
+        }
+        .ip-box:hover { border-color: var(--accent-orange); }
+
+        /* --- BIOME CARD SYSTEM --- */
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        
+        .biome-card {
+            background: var(--bg-panel); border-radius: 12px; overflow: hidden; margin-bottom: 60px;
+            border: 1px solid #252525; opacity: 0; transform: translateY(30px); transition: 0.6s ease-out;
+        }
+        .biome-card.visible { opacity: 1; transform: translateY(0); }
+
+        .biome-banner {
+            height: 220px; background-size: cover; background-position: center; position: relative;
+            display: flex; align-items: flex-end; padding: 30px;
+        }
+        .biome-banner::after {
+            content:''; position: absolute; top:0; left:0; right:0; bottom:0;
+            background: linear-gradient(0deg, var(--bg-panel) 0%, transparent 100%);
+        }
+        .biome-title { position: relative; z-index: 2; width: 100%; display: flex; justify-content: space-between; align-items: flex-end; }
+        .biome-title h2 { font-size: 2.5rem; text-shadow: 2px 2px 4px #000; margin: 0; }
+        
+        .boss-btn {
+            background: rgba(255,255,255,0.1); backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,0.3); color: #fff;
+            padding: 8px 16px; border-radius: 20px; cursor: pointer;
+            font-weight: bold; font-size: 0.8rem; text-transform: uppercase; transition: 0.3s;
+        }
+        .boss-btn:hover { background: var(--accent-orange); border-color: var(--accent-orange); }
+
+        /* TABS */
+        .biome-tabs { display: flex; border-bottom: 2px solid #252525; background: #1a1a1a; }
+        .tab-btn {
+            flex: 1; padding: 15px; background: none; border: none; color: #777;
+            font-weight: bold; cursor: pointer; text-transform: uppercase; font-size: 0.9rem; transition: 0.3s;
+        }
+        .tab-btn:hover { color: #fff; background: #222; }
+        .tab-btn.active { color: var(--accent-orange); border-bottom: 3px solid var(--accent-orange); background: #202020; }
+        
+        .tab-content { display: none; padding: 30px; animation: fadeIn 0.4s; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* TABLES */
+        table { width: 100%; border-collapse: collapse; background: #1a1a1a; margin-top: 10px; }
+        th { text-align: left; padding: 12px; background: #252525; color: #aaa; font-size: 0.8rem; text-transform: uppercase; }
+        td { padding: 12px; border-bottom: 1px solid #252525; color: #ddd; }
+        tr:last-child td { border-bottom: none; }
+        
+        .hp { color: #ff6b6b; font-weight: bold; }
+        .stm { color: #feca57; font-weight: bold; }
+
+        /* --- UNCHARTED SECTION --- */
+        .uncharted-section {
+            text-align: center; padding: 60px; background: #0f0f0f; border: 1px solid #333; margin-top: 50px;
+            background-image: url('https://www.transparenttextures.com/patterns/black-scales.png');
+        }
+        .uncharted-section i { font-size: 3rem; color: #555; margin-bottom: 20px; }
+
+        /* --- MODAL --- */
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 2000; align-items: center; justify-content: center;
+        }
+        .modal-box {
+            background: #1a1a1a; padding: 40px; max-width: 500px; width: 90%; position: relative;
+            border: 1px solid #333; box-shadow: 0 0 50px rgba(216, 109, 44, 0.2); text-align: center;
+        }
+        .close-btn { position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer; color: #666; }
+        .close-btn:hover { color: #fff; }
+
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            .hamburger { display: block; }
+            header h1 { font-size: 2rem; }
+            .biome-title { flex-direction: column; align-items: flex-start; gap: 10px; }
+            .server-widget { margin: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loader">
+        <div class="loader-rune"><i class="fas fa-dragon"></i></div>
+        <h3 style="margin-top:20px; color:#666;">LOADING WORLD...</h3>
+    </div>
+
+    <nav>
+        <div class="logo" onclick="window.scrollTo(0,0)"><i class="fas fa-viking"></i> VALHEIM CODEX</div>
+        <div class="nav-links">
+            <a href="#biomes">Biomes</a>
+            <a href="#tips">Beginner Tips</a>
+            <a href="https://discord.gg/BNpA6zkUQc" target="_blank" style="color:var(--discord)"><i class="fab fa-discord"></i> Discord</a>
+        </div>
+        <i class="fas fa-bars hamburger" onclick="toggleMenu()"></i>
+        <div class="mobile-menu" id="mobileMenu">
+            <a href="#biomes" onclick="toggleMenu()">Biomes</a>
+            <a href="#tips" onclick="toggleMenu()">Beginner Tips</a>
+            <a href="https://discord.gg/BNpA6zkUQc">Discord</a>
+        </div>
+    </nav>
+
+    <header>
+        <div class="hero-bg"></div>
+        <h1>Begin Your Saga</h1>
+        <div class="search-wrapper">
+            <input type="text" id="search" class="search-input" onkeyup="searchBiomes()" placeholder="Search guide (e.g., Iron, Food, Boss)...">
+        </div>
+    </header>
+
+    <div class="server-widget">
+        <h3><i class="fas fa-users"></i> Join Our Clan</h3>
+        <p style="color:#aaa;">Our server is live 24/7. Friendly to new players.</p>
+        <div class="ip-box" onclick="copyIP()" title="Click to Copy">
+            <span id="ipText">valheim.myserver.ru:2456</span>
+        </div>
+    </div>
+
+    <div class="container" id="biomes">
+        
+        <div class="biome-card">
+            <div class="biome-banner" style="background-image: url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=2232');">
+                <div class="biome-title">
+                    <div>
+                        <span style="background:#78a153; color:#000; padding:4px 8px; font-size:0.7rem; font-weight:bold; border-radius:4px;">START HERE</span>
+                        <h2>The Meadows</h2>
+                    </div>
+                    <button class="boss-btn" onclick="showModal('Eikthyr', 'Craft a Round Shield and Flint Spear. Block his antler attack, then strike. Dodge his lightning by rolling (Space + Direction).')"><i class="fas fa-skull"></i> Boss Strategy</button>
+                </div>
+            </div>
+            <div class="biome-tabs">
+                <button class="tab-btn active" onclick="openTab(event, 'meadows-1')">First Steps</button>
+                <button class="tab-btn" onclick="openTab(event, 'meadows-2')">Food & Health</button>
+                <button class="tab-btn" onclick="openTab(event, 'meadows-3')">Enemies</button>
+            </div>
+            <div id="meadows-1" class="tab-content active">
+                <p>Welcome to Valheim. This is the safest biome.</p>
+                <ul style="margin-top:10px; margin-left:20px;">
+                    <li><strong>Workbench:</strong> You need a Hammer (Wood) to build it. It must be covered by a roof to function.</li>
+                    <li><strong>Rested Buff:</strong> Never leave home without it. Sit by a fire inside your house to get it. It speeds up Stamina regen by 100%.</li>
+                    <li><strong>Tools:</strong> Prioritize a Flint Axe and a Bow.</li>
+                </ul>
+            </div>
+            <div id="meadows-2" class="tab-content">
+                <p>You have 25 Health by default. You <strong>must</strong> eat to survive.</p>
+                <table>
+                    <tr><th>Food</th><th>Stats</th><th>Source</th></tr>
+                    <tr><td>Cooked Boar Meat</td><td><span class="hp">+30 HP</span> / <span class="stm">+10 ST</span></td><td>Kill Boars -> Cook on fire</td></tr>
+                    <tr><td>Grilled Neck Tail</td><td><span class="hp">+25 HP</span> / <span class="stm">+8 ST</span></td><td>Kill Necks (River) -> Cook</td></tr>
+                    <tr><td>Honey</td><td><span class="hp">+8 HP</span> / <span class="stm">+35 ST</span></td><td>Find Bees -> Build Hive</td></tr>
+                </table>
+            </div>
+            <div id="meadows-3" class="tab-content">
+                <ul>
+                    <li><strong>Greyling:</strong> Weak and afraid of fire (Holding a torch helps).</li>
+                    <li><strong>Boar:</strong> Aggressive. Can be tamed if you trap them and throw Mushrooms/Berries.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="biome-card">
+            <div class="biome-banner" style="background-image: url('https://images.unsplash.com/photo-1448375240586-dfd8d395ea6c?q=80&w=2070');">
+                <div class="biome-title">
+                    <div>
+                        <span style="background:#3b5266; color:#fff; padding:4px 8px; font-size:0.7rem; font-weight:bold; border-radius:4px;">DANGEROUS</span>
+                        <h2>Black Forest</h2>
+                    </div>
+                    <button class="boss-btn" onclick="showModal('The Elder', 'He is a giant tree. Hide behind the pillars of his altar to block his vines. Use Fire Arrows. Burn him down.')"><i class="fas fa-skull"></i> Boss Strategy</button>
+                </div>
+            </div>
+            <div class="biome-tabs">
+                <button class="tab-btn active" onclick="openTab(event, 'forest-1')">Mining (Bronze)</button>
+                <button class="tab-btn" onclick="openTab(event, 'forest-2')">Threats</button>
+                <button class="tab-btn" onclick="openTab(event, 'forest-3')">Crafting</button>
+            </div>
+            <div id="forest-1" class="tab-content active">
+                <p>To progress, you need to make Bronze.</p>
+                <ol style="margin-top:10px; margin-left:20px;">
+                    <li><strong>Copper:</strong> Found in ground as massive mossy rocks.</li>
+                    <li><strong>Tin:</strong> Found near water shores as small silver rocks.</li>
+                    <li><strong>Smelting:</strong> You need <em>Surtling Cores</em> (found in Burial Chambers/Dungeons) to build a Smelter.</li>
+                    <li><strong>Recipe:</strong> 2 Copper + 1 Tin = 1 Bronze.</li>
+                </ol>
+            </div>
+            <div id="forest-2" class="tab-content">
+                <ul>
+                    <li><strong>Troll:</strong> Huge blue giant. Do not melee him yet. Use a Bow and kite him. His tree-club hits through walls.</li>
+                    <li><strong>Greydwarf Brute:</strong> Heals nearby enemies. Kill him first.</li>
+                    <li><strong>Skeletons:</strong> Guard dungeons. Weak to Blunt damage (Clubs/Maces).</li>
+                </ul>
+            </div>
+            <div id="forest-3" class="tab-content">
+                <p><strong>Cultivator (Bronze):</strong> Allows you to plant Carrots. Farming is essential for food.</p>
+                <p><strong>Bronze Axe:</strong> Allows you to chop Birch trees to get Fine Wood.</p>
+            </div>
+        </div>
+
+        <div class="biome-card">
+            <div class="biome-banner" style="background-image: url('https://images.unsplash.com/photo-1549480119-0734c387b003?q=80&w=2069');">
+                <div class="biome-title">
+                    <div>
+                        <span style="background:#5c5238; color:#fff; padding:4px 8px; font-size:0.7rem; font-weight:bold; border-radius:4px;">VERY HARD</span>
+                        <h2>The Swamp</h2>
+                    </div>
+                    <button class="boss-btn" onclick="showModal('Bonemass', 'Mandatory: Poison Resistance Mead. Weapon: Iron Mace. Do not use arrows. Block his attack, then hit him.')"><i class="fas fa-skull"></i> Boss Strategy</button>
+                </div>
+            </div>
+            <div class="biome-tabs">
+                <button class="tab-btn active" onclick="openTab(event, 'swamp-1')">Survival Rule</button>
+                <button class="tab-btn" onclick="openTab(event, 'swamp-2')">Iron</button>
+                <button class="tab-btn" onclick="openTab(event, 'swamp-3')">Monsters</button>
+            </div>
+            <div id="swamp-1" class="tab-content active">
+                <p style="color:#ff6b6b; font-size:1.1rem; font-weight:bold;">⚠️ POISON WARNING</p>
+                <p>Before entering, you must brew <strong>Poison Resistance Mead</strong> in a Cauldron and Fermenter. Without it, Blobs and Leeches will kill you in seconds.</p>
+                <p>You are always "Wet" here, which reduces Stamina regen. Don't run too much.</p>
+            </div>
+            <div id="swamp-2" class="tab-content">
+                <p><strong>Sunken Crypts:</strong> Use the Swamp Key (from The Elder) to open gates. Inside, mine "Muddy Scrap Piles" to get Iron Scraps.</p>
+                <p><strong>Iron Gear:</strong> Provides a massive armor upgrade. Prioritize the Iron Pickaxe and Iron Mace.</p>
+            </div>
+            <div id="swamp-3" class="tab-content">
+                <ul>
+                    <li><strong>Draugr:</strong> Undead vikings. Parrying them is key.</li>
+                    <li><strong>Abomination:</strong> Giant tree monster. Lure it over a Surtling Fire geyser to burn it to death quickly.</li>
+                    <li><strong>Wraith:</strong> Flying ghosts that appear at night.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="uncharted-section" id="tips">
+            <i class="fas fa-compass"></i>
+            <h2 style="color:#aaa;">Uncharted Lands Await</h2>
+            <p style="max-width:600px; margin:0 auto; color:#777;">
+                You have mastered the basics. Beyond the Swamps lie freezing mountains that require warm cloaks, and golden plains where death comes swift from the air. <br><br>
+                Keep upgrading your gear, keep your food buffs active, and Odin will guide you.
+            </p>
+        </div>
+
+    </div>
+
+    <div class="modal" id="modalWindow" onclick="closeModal(event)">
+        <div class="modal-box">
+            <span class="close-btn" onclick="document.getElementById('modalWindow').style.display='none'">&times;</span>
+            <h2 id="modalTitle" style="color:var(--accent-orange); margin-bottom:15px;"></h2>
+            <p id="modalText" style="color:#ddd; font-size:1.1rem;"></p>
+        </div>
+    </div>
+
+    <footer style="text-align:center; padding:50px; color:#555; background:#000;">
+        <p>&copy; 2026 Valheim Fan Codex | For Beginners</p>
+    </footer>
+
+    <script>
+        // Loader Animation
+        window.onload = function() {
+            setTimeout(() => {
+                document.getElementById('loader').style.opacity = '0';
+                setTimeout(() => { document.getElementById('loader').style.display = 'none'; }, 500);
+            }, 1000);
+            
+            // Scroll Animation
+            const observer = new IntersectionObserver(entries => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) entry.target.classList.add('visible');
+                });
+            });
+            document.querySelectorAll('.biome-card').forEach(card => observer.observe(card));
+        };
+
+        // Mobile Menu
+        function toggleMenu() { document.getElementById('mobileMenu').classList.toggle('active'); }
+
+        // Tabs Logic
+        function openTab(evt, tabName) {
+            let i, tabcontent, tablinks;
+            let parent = evt.currentTarget.closest('.biome-card');
+            
+            tabcontent = parent.getElementsByClassName("tab-content");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+                tabcontent[i].classList.remove("active");
+            }
+            
+            tablinks = parent.getElementsByClassName("tab-btn");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+            
+            document.getElementById(tabName).style.display = "block";
+            setTimeout(() => document.getElementById(tabName).classList.add("active"), 10);
+            evt.currentTarget.className += " active";
+        }
+
+        // Modal Logic
+        function showModal(title, text) {
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalText').innerText = text;
+            document.getElementById('modalWindow').style.display = 'flex';
+        }
+        function closeModal(e) {
+            if (e.target.id === 'modalWindow') e.target.style.display = 'none';
+        }
+
+        // Copy IP
+        function copyIP() {
+            navigator.clipboard.writeText(document.getElementById('ipText').innerText).then(() => {
+                alert("Server IP Copied!");
+            });
+        }
+
+        // Search Logic
+        function searchBiomes() {
+            let input = document.getElementById('search').value.toLowerCase();
+            let cards = document.getElementsByClassName('biome-card');
+            for (let i = 0; i < cards.length; i++) {
+                if (cards[i].innerText.toLowerCase().includes(input)) {
+                    cards[i].style.display = "";
+                } else {
+                    cards[i].style.display = "none";
+                }
+            }
+        }
+    </script>
+</body>
+</html>
